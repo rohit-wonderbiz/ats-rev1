@@ -12,6 +12,7 @@ import { ProfileComponent } from './components/profile/profile.component';
 import { FormsModule } from '@angular/forms';
 import { ToastComponent } from './components/toast/toast.component';
 import { WebcamComponent } from './components/webcam/webcam.component';
+import { ProfileListComponent } from './components/profile-list/profile-list.component';
 
 @NgModule({
   declarations: [
@@ -24,6 +25,7 @@ import { WebcamComponent } from './components/webcam/webcam.component';
     ProfileComponent,
     ToastComponent,
     WebcamComponent,
+    ProfileListComponent,
   ],
   imports: [BrowserModule, AppRoutingModule, FormsModule],
   providers: [provideHttpClient()],

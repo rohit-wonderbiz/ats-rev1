@@ -3,6 +3,6 @@ export default interface User {
   firstName: string;
   lastName: string;
   designationName: string;
-  // profilePicture: string;
+  email: string;
   profilePic: string;
 }
