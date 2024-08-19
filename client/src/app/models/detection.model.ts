@@ -1,3 +1,5 @@
+import User from './user.model';
+
 interface FaceDetectionResponse {
   face_names: string[];
   image_base64: string;

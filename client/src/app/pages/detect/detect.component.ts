@@ -1,6 +1,10 @@
 import { Component, ElementRef, viewChild, ViewChild } from '@angular/core';
 import { FaceService } from '../../services/face.service';
+import Toast from '../../models/toast.model';
+import User from '../../models/user.model';
 
+// patch nodejs environment, we need to provide an implementation of
+// HTMLCanvasElement and HTMLImageElement
 @Component({
   selector: 'app-detect',
   templateUrl: './detect.component.html',
@@ -8,6 +12,7 @@ import { FaceService } from '../../services/face.service';
 })
 export class DetectComponent {
   constructor(private attendanceService: FaceService) {}
+  isClose: boolean = false;
   isDetected: boolean = false;
   isMarkAttendanceDisabled: boolean = false;
   private stream: MediaStream | null = null;
@@ -18,6 +23,87 @@ export class DetectComponent {
 
   @ViewChild('display', { static: true })
   displayElement!: ElementRef<HTMLParagraphElement>;
+  users: User[] = [
+    {
+      userId: 1,
+      firstName: 'Vighnesh',
+      lastName: 'Manjrekar',
+      designationName: 'SDE',
+      profilePic: '',
+      email: '',
+    },
+    {
+      userId: 2,
+      firstName: 'Test',
+      lastName: 'User',
+      designationName: 'SDE',
+      profilePic: '',
+      email: '',
+    },
+    {
+      userId: 2,
+      firstName: 'Test',
+      lastName: 'User',
+      designationName: 'SDE',
+      profilePic: '',
+      email: '',
+    },
+    {
+      userId: 2,
+      firstName: 'Test',
+      lastName: 'User',
+      designationName: 'SDE',
+      profilePic: '',
+      email: '',
+    },    {
+      userId: 2,
+      firstName: 'Test',
+      lastName: 'User',
+      designationName: 'SDE',
+      profilePic: '',
+      email: '',
+    },    {
+      userId: 2,
+      firstName: 'Test',
+      lastName: 'User',
+      designationName: 'SDE',
+      profilePic: '',
+      email: '',
+    },    {
+      userId: 2,
+      firstName: 'Test',
+      lastName: 'User',
+      designationName: 'SDE',
+      profilePic: '',
+      email: '',
+    },    {
+      userId: 2,
+      firstName: 'Test',
+      lastName: 'User',
+      designationName: 'SDE',
+      profilePic: '',
+      email: '',
+    },    {
+      userId: 2,
+      firstName: 'Test',
+      lastName: 'User',
+      designationName: 'SDE',
+      profilePic: '',
+      email: '',
+    },    {
+      userId: 2,
+      firstName: 'Test',
+      lastName: 'User',
+      designationName: 'SDE',
+      profilePic: '',
+      email: '',
+    },
+  ];
+  toast: Toast = {
+    position: 'top',
+    message: '',
+    type: 'success',
+  };
 
   ngOnInit(): void {
     this.initializeWebcam();
@@ -48,7 +134,9 @@ export class DetectComponent {
       console.error('getUserMedia not supported in this browser.');
     }
   }
-
+  onClose = () => {
+    this.isClose = false;
+  };
   private stopWebcam(): void {
     if (this.stream) {
       const tracks = this.stream.getTracks();
@@ -75,19 +163,32 @@ export class DetectComponent {
             const image = new Image();
             image.src = imageUrl;
             if (this.resElement) {
-              this.resElement.nativeElement.innerHTML = ''; // Clear previous content
+              this.resElement.nativeElement.innerHTML = '';
               this.resElement.nativeElement.appendChild(image);
-  
-              // Include all names, including "Unknown"
-              const attendedNames = data.face_names;
-  
-              this.displayElement.nativeElement.innerText = `Marked Attendance for ${attendedNames.join(
-                ', '
-              )} at ${data.attendanceTime}`;
+              const attendedNames = data.face_names.filter(
+                (f) => f != 'Unknown'
+              );
+              console.log(attendedNames);
+              this.displayElement.nativeElement.innerText =
+                attendedNames.length > 0
+                  ? `Marked Attendance for ${attendedNames.join(', ')} at ${
+                      data.attendanceTime
+                    }`
+                  : 'No attendance marked';
+              this.isClose = true;
+              this.toast.message =
+                attendedNames.length > 0
+                  ? `Marked Attendance for ${attendedNames.join(', ')} at ${
+                      data.attendanceTime
+                    }`
+                  : 'No attendance marked';
+              this.toast.position = 'top';
+              this.toast.type = attendedNames.length > 0 ? 'success' : 'info';
               this.isDetected = true;
+              this.isMarkAttendanceDisabled = false;
               setTimeout(() => {
+                this.isClose = false;
                 this.isDetected = false;
-                this.isMarkAttendanceDisabled = false;
                 this.displayElement.nativeElement.innerText = '';
               }, 4000);
             }
@@ -95,6 +196,7 @@ export class DetectComponent {
           },
           error: (error) => {
             console.error('Error marking attendance:', error);
+            this.isMarkAttendanceDisabled = false;
           },
         });
       }

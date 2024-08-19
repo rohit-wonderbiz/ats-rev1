@@ -9,6 +9,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import User from '../../models/user.model';
 import { FaceService } from '../../services/face.service';
 import Toast from '../../models/toast.model';
+import * as canvas from 'canvas';
+import * as faceapi from 'face-api.js';
 
 @Component({
   selector: 'app-enrol',
@@ -16,19 +18,18 @@ import Toast from '../../models/toast.model';
   styleUrl: './enrol.component.css',
 })
 export class EnrolComponent {
-  constructor(private router: Router, private faceService: FaceService) {
-
-  }
+  detectedFace: number = 0;
+  constructor(private router: Router, private faceService: FaceService) {}
   isClose: boolean = false;
   isEncodingDisabled: boolean = false;
-  isCapturedDisabled:boolean = false;
+  isCapturedDisabled: boolean = false;
   @ViewChild('video', { static: true })
   videoElement!: ElementRef<HTMLVideoElement>;
   @ViewChild('response', { static: true })
   responseElement!: ElementRef<HTMLDivElement>;
   @Output() closeToast = new EventEmitter();
   private stream: MediaStream | null = null;
-  
+
   res: string = '';
   toast: Toast = {
     position: 'top',
@@ -40,7 +41,7 @@ export class EnrolComponent {
     firstName: '',
     lastName: '',
     designationName: '',
-    // profilePic: new Blob([]),
+    email: '',
     profilePic: '',
   };
   private loadUser(): void {
@@ -59,9 +60,14 @@ export class EnrolComponent {
     }
   }
 
-  ngOnInit(): void {
-    this.loadUser();
-    this.initializeWebcam();
+  async ngOnInit() {
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri('assets/models'),
+    ]).then((v) => {
+      console.log(v);
+      this.loadUser();
+      this.initializeWebcam();
+    });
   }
   ngOnDestroy(): void {
     this.stopWebcam();
@@ -79,6 +85,14 @@ export class EnrolComponent {
           if (video) {
             video.srcObject = stream;
             this.stream = stream;
+
+            setInterval(async () => {
+              const detections = await faceapi.detectAllFaces(
+                video,
+                new faceapi.TinyFaceDetectorOptions()
+              );
+              this.detectedFace = detections.length;
+            }, 100);
           }
         })
         .catch((error: any) => {
@@ -102,7 +116,7 @@ export class EnrolComponent {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const context = canvas.getContext('2d');
-    this.isCapturedDisabled = true
+    this.isCapturedDisabled = true;
     if (context) {
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
@@ -128,6 +142,7 @@ export class EnrolComponent {
           },
           (error) => {
             console.error('Error capturing image:', error);
+            this.isCapturedDisabled = false;
           }
         );
       }
@@ -159,6 +174,7 @@ export class EnrolComponent {
       },
       (error) => {
         console.error('Error saving encodings:', error);
+        this.isCapturedDisabled = false;
       }
     );
   }
