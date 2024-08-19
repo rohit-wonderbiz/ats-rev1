@@ -27,18 +27,18 @@ export class HomeComponent {
     lastName: '',
     designationName: '',
     // profilePicture: new Blob([]),
-    profilePicture: '',
+    profilePic: '',
   };
 
   getUser = () => {
     console.log(this.user.userId);
     this.userService.getUserById(this.user.userId).subscribe({
       next: (data) => {
-        const { designationName, firstName, lastName, profilePicture: profilePic } = data;
+        const { designationName, firstName, lastName,profilePic} = data;
         this.user.firstName = firstName;
         this.user.lastName = lastName;
         this.user.designationName = designationName;
-        this.user.profilePicture = profilePic;
+        this.user.profilePic = profilePic;
         this.isUser = true;
         localStorage.setItem('user', JSON.stringify(this.user));
       },

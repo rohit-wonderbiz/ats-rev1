@@ -18,7 +18,7 @@ export class UserService {
     return this.http.get<User[]>(`${this.baseURI}/${id}`).pipe(
       map((users) => {
         if (users.length === 0) {
-          throw new Error('Employee ID does not exist');
+          throw new Error('User does not exist');
         }
         return users[0]; // Assuming the response is an array with one user
       }),

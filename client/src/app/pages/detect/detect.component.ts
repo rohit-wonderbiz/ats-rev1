@@ -9,6 +9,7 @@ import { FaceService } from '../../services/face.service';
 export class DetectComponent {
   constructor(private attendanceService: FaceService) {}
   isDetected: boolean = false;
+  isMarkAttendanceDisabled: boolean = false;
   private stream: MediaStream | null = null;
   @ViewChild('video', { static: true })
   videoElement!: ElementRef<HTMLVideoElement>;
@@ -61,6 +62,7 @@ export class DetectComponent {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const context = canvas.getContext('2d');
+    this.isMarkAttendanceDisabled = true;
     if (context) {
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       const imageBlob = await new Promise<Blob | null>((resolve) =>
@@ -85,6 +87,7 @@ export class DetectComponent {
               this.isDetected = true;
               setTimeout(() => {
                 this.isDetected = false;
+                this.isMarkAttendanceDisabled = false;
                 this.displayElement.nativeElement.innerText = '';
               }, 4000);
             }

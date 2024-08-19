@@ -16,16 +16,19 @@ import Toast from '../../models/toast.model';
   styleUrl: './enrol.component.css',
 })
 export class EnrolComponent {
-  constructor(private router: Router, private faceService: FaceService) {}
+  constructor(private router: Router, private faceService: FaceService) {
+
+  }
   isClose: boolean = false;
   isEncodingDisabled: boolean = false;
+  isCapturedDisabled:boolean = false;
   @ViewChild('video', { static: true })
   videoElement!: ElementRef<HTMLVideoElement>;
   @ViewChild('response', { static: true })
   responseElement!: ElementRef<HTMLDivElement>;
   @Output() closeToast = new EventEmitter();
   private stream: MediaStream | null = null;
-
+  
   res: string = '';
   toast: Toast = {
     position: 'top',
@@ -37,8 +40,8 @@ export class EnrolComponent {
     firstName: '',
     lastName: '',
     designationName: '',
-    // profilePicture: new Blob([]),
-    profilePicture: '',
+    // profilePic: new Blob([]),
+    profilePic: '',
   };
   private loadUser(): void {
     const userString = localStorage.getItem('user');
@@ -99,6 +102,7 @@ export class EnrolComponent {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const context = canvas.getContext('2d');
+    this.isCapturedDisabled = true
     if (context) {
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
@@ -117,7 +121,7 @@ export class EnrolComponent {
             this.toast.message = 'Face captured';
             this.toast.position = 'top';
             this.toast.type = 'success';
-            console.log(this.toast);
+            this.isCapturedDisabled = false;
             setTimeout(() => {
               this.isClose = false;
             }, 4000);
@@ -136,6 +140,7 @@ export class EnrolComponent {
 
   async saveEncodings(): Promise<void> {
     this.isEncodingDisabled = true;
+    this.isCapturedDisabled = true;
     const formData = new FormData();
     formData.append('employee_id', this.user.userId.toString());
 
@@ -146,6 +151,8 @@ export class EnrolComponent {
         this.toast.position = 'top';
         this.toast.type = 'success';
         console.log(this.toast);
+        this.isCapturedDisabled = false;
+        this.router.navigate(['/detect']);
         setTimeout(() => {
           this.isClose = false;
         }, 4000);
