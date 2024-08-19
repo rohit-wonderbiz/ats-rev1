@@ -50,10 +50,12 @@ IMAGES_PATH = 'images/'
 
 # database connection
 conn = pyodbc.connect(connection_string)
+# class FaceDetectionResponse(BaseModel):
+#     attendance: List[str]
+#     image_base64: str
 class FaceDetectionResponse(BaseModel):
-    face_names: List[str]
+    attendance: List[dict]  
     image_base64: str
-    attendanceTime: str
 
 # Load known encodings from the database
 def load_encodings_from_db(conn):
@@ -76,17 +78,19 @@ def is_recently_detected(face_encoding):
 # Face Detection function
 def detect_known_faces(known_face_id, known_face_names, known_face_encodings, frame):
     apiUrl = apiBaseUrl + "/attendanceLog/"
-    
-    def mark_attendance(userId):
-        AttendanceLogTime = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        data = {
-            "UserId": userId,
-            "AttendanceLogTime": AttendanceLogTime,
-            "CheckType": cameraType
-        }
-        requests.post(url=apiUrl, json=data)
-        print(f"Marked Attendance for {userId}")
-
+    data_list= []
+    def mark_attendance(d):
+        # print(userId)
+        # AttendanceLogTime = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        # data = {
+        #     "UserId": userId,
+        #     "AttendanceLogTime": AttendanceLogTime,
+        #     "CheckType": cameraType
+        # }
+        # x = requests.post(url=apiUrl, data=data_list)
+        # response = x.json()  # Parse the JSON response to a Python dictionary
+        # print(f"Marked Attendance for {userId}")
+        return d  # Return the dictionary, not a string
     # Convert the frame from BGR to RGB
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -95,11 +99,11 @@ def detect_known_faces(known_face_id, known_face_names, known_face_encodings, fr
     face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
     face_names = []
+    response = []
     detected_id = None  # Initialize detected_id to None
     current_time = time.time()
     
     if detectMultipleface:
-        print("Multiple Face")
         for i, face_encoding in enumerate(face_encodings):
             matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
             name = "Unknown"
@@ -109,22 +113,21 @@ def detect_known_faces(known_face_id, known_face_names, known_face_encodings, fr
             if matches[best_match_index]:
                 detected_id = known_face_id[best_match_index]
                 name = known_face_names[best_match_index]
-                print(f"Face distance for {name}: {face_distances[best_match_index]}")
                 if face_distances[best_match_index] < 0.45:
                     if name not in last_attendance_time or (current_time - last_attendance_time[name]) > waitTime:
-                        print(f"Last attendance time for {name}: {last_attendance_time.get(name, 'None')}")
                         last_attendance_time[name] = current_time
-                        mark_attendance(detected_id)
+                        # response.append(mark_attendance(detected_id))  # Append the dictionary
+                        data_list.append({
+                            "UserId": mark_attendance(detected_id),
+                            "AttendanceLogTime": datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                            "CheckType": cameraType
+                        })  # Append the dictionary
             else:
-                print(f"Unknown face detected, saving image.")
+                # Save the unknown face
                 unknown_face_filename = os.path.join(unknown_faces_dir, f"unknown_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.png")
                 cv2.imwrite(unknown_face_filename, frame[face_locations[i][0]:face_locations[i][2], face_locations[i][3]:face_locations[i][1]])
-
             face_names.append(name)
-
     else:
-        print("Single Face")
-        # Detect and mark attendance for only the first face found
         if face_encodings:
             face_encoding = face_encodings[0]
             matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
@@ -134,18 +137,18 @@ def detect_known_faces(known_face_id, known_face_names, known_face_encodings, fr
             if matches[best_match_index] and face_distances[best_match_index] < 0.45:
                 detected_id = known_face_id[best_match_index]
                 name = known_face_names[best_match_index]
-                if face_distances[best_match_index] < 0.45:
-                    if name not in last_attendance_time or (current_time - last_attendance_time[name]) > waitTime:
-                        last_attendance_time[name] = current_time
-                        mark_attendance(detected_id)
+                if name not in last_attendance_time or (current_time - last_attendance_time[name]) > waitTime:
+                    last_attendance_time[name] = current_time
+                    response.append(mark_attendance(detected_id))  # Append the dictionary
             else:
                 # Save the unknown face
                 unknown_face_filename = os.path.join(unknown_faces_dir, f"unknown_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.png")
                 cv2.imwrite(unknown_face_filename, frame[face_locations[0][0]:face_locations[0][2], face_locations[0][3]:face_locations[0][1]])
 
             face_names.append(name)
-
-    return face_locations, face_names, detected_id  # Return detected_id instead of id
+    attendance =mark_attendance(data_list)
+    # print(attendance)
+    return face_locations, face_names, attendance  # Return the response list of dictionaries
 
 
 # Capture Image endpoint
@@ -200,7 +203,7 @@ async def mark_attendance(file: UploadFile = File(...)):
     frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
     known_face_id, known_face_names, known_face_encodings = load_encodings_from_db(conn)
-    face_locations, face_names, detected_id = detect_known_faces(known_face_id, known_face_names, known_face_encodings, frame)
+    face_locations, face_names, attendance = detect_known_faces(known_face_id, known_face_names, known_face_encodings, frame)
 
     # Draw the boundary box and label for each detected face
     for (top, right, bottom, left), name in zip(face_locations, face_names):
@@ -214,20 +217,20 @@ async def mark_attendance(file: UploadFile = File(...)):
     img_base64 = base64.b64encode(img_bytes.getvalue()).decode('utf-8')
 
     # Fetch the attendance time only if a known face is detected
-    attendanceTime = ""
-    if detected_id is not None:
-        apiUrl = apiBaseUrl + "/attendanceLog/user/" + str(detected_id) 
-        result = requests.get(url=apiUrl)
-        data = result.json()
-        attendanceTime = data[-1]['attendanceLogTime']
-        attendanceTime = str(datetime.fromisoformat(attendanceTime).strftime("%B %d, %Y, %I:%M %p"))
+    # attendanceTime = ""
+    # if detected_id is not None:
+    #     apiUrl = apiBaseUrl + "/attendanceLog/user/" + str(detected_id) 
+    #     result = requests.get(url=apiUrl)
+    #     data = result.json()
+    #     attendanceTime = data[-1]['attendanceLogTime']
+    #     attendanceTime = str(datetime.fromisoformat(attendanceTime).strftime("%B %d, %Y, %I:%M %p"))
 
     # Create the response model
     response_data = FaceDetectionResponse(
-        face_names=face_names,
+        attendance=attendance,
         image_base64=img_base64,
-        attendanceTime=attendanceTime
     )
+    print(response_data)
 
     return JSONResponse(content=response_data.model_dump())
 
