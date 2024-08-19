@@ -99,27 +99,31 @@ def detect_known_faces(known_face_id, known_face_names, known_face_encodings, fr
     current_time = time.time()
     
     if detectMultipleface:
-        # Detect and mark attendance for multiple faces
+        print("Multiple Face")
         for i, face_encoding in enumerate(face_encodings):
             matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
             name = "Unknown"
             face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
             best_match_index = np.argmin(face_distances)
-            if matches[best_match_index] and face_distances[best_match_index] < 0.45:
+
+            if matches[best_match_index]:
                 detected_id = known_face_id[best_match_index]
                 name = known_face_names[best_match_index]
-                if face_distances[best_match_index] < 0.35:
+                print(f"Face distance for {name}: {face_distances[best_match_index]}")
+                if face_distances[best_match_index] < 0.45:
                     if name not in last_attendance_time or (current_time - last_attendance_time[name]) > waitTime:
+                        print(f"Last attendance time for {name}: {last_attendance_time.get(name, 'None')}")
                         last_attendance_time[name] = current_time
                         mark_attendance(detected_id)
             else:
-                # Save the unknown face
+                print(f"Unknown face detected, saving image.")
                 unknown_face_filename = os.path.join(unknown_faces_dir, f"unknown_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.png")
                 cv2.imwrite(unknown_face_filename, frame[face_locations[i][0]:face_locations[i][2], face_locations[i][3]:face_locations[i][1]])
 
             face_names.append(name)
 
     else:
+        print("Single Face")
         # Detect and mark attendance for only the first face found
         if face_encodings:
             face_encoding = face_encodings[0]
@@ -130,7 +134,7 @@ def detect_known_faces(known_face_id, known_face_names, known_face_encodings, fr
             if matches[best_match_index] and face_distances[best_match_index] < 0.45:
                 detected_id = known_face_id[best_match_index]
                 name = known_face_names[best_match_index]
-                if face_distances[best_match_index] < 0.35:
+                if face_distances[best_match_index] < 0.45:
                     if name not in last_attendance_time or (current_time - last_attendance_time[name]) > waitTime:
                         last_attendance_time[name] = current_time
                         mark_attendance(detected_id)
