@@ -1,3 +1,4 @@
+import json
 import cv2
 import os
 import requests
@@ -50,9 +51,7 @@ IMAGES_PATH = 'images/'
 
 # database connection
 conn = pyodbc.connect(connection_string)
-# class FaceDetectionResponse(BaseModel):
-#     attendance: List[str]
-#     image_base64: str
+
 class FaceDetectionResponse(BaseModel):
     attendance: List[dict]  
     image_base64: str
@@ -75,22 +74,16 @@ def is_recently_detected(face_encoding):
     return False
 
 # Face Detection function
-# Face Detection function
 def detect_known_faces(known_face_id, known_face_names, known_face_encodings, frame):
-    apiUrl = apiBaseUrl + "/attendanceLog/"
+    apiUrl = apiBaseUrl + "/attendanceLog/multiple"
     data_list= []
     def mark_attendance(d):
-        # print(userId)
-        # AttendanceLogTime = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        # data = {
-        #     "UserId": userId,
-        #     "AttendanceLogTime": AttendanceLogTime,
-        #     "CheckType": cameraType
-        # }
-        # x = requests.post(url=apiUrl, data=data_list)
-        # response = x.json()  # Parse the JSON response to a Python dictionary
+        print("before", d)
+        x = requests.post(url=apiUrl,json=d)
+        response = x.json()
+         # Parse the JSON response to a Python dictionary
         # print(f"Marked Attendance for {userId}")
-        return d  # Return the dictionary, not a string
+        return response  # Return the dictionary, not a string
     # Convert the frame from BGR to RGB
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -118,7 +111,7 @@ def detect_known_faces(known_face_id, known_face_names, known_face_encodings, fr
                         last_attendance_time[name] = current_time
                         # response.append(mark_attendance(detected_id))  # Append the dictionary
                         data_list.append({
-                            "UserId": mark_attendance(detected_id),
+                            "UserId": detected_id,
                             "AttendanceLogTime": datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
                             "CheckType": cameraType
                         })  # Append the dictionary
@@ -148,8 +141,9 @@ def detect_known_faces(known_face_id, known_face_names, known_face_encodings, fr
             face_names.append(name)
     attendance =mark_attendance(data_list)
     # print(attendance)
-    return face_locations, face_names, attendance  # Return the response list of dictionaries
-
+    # mark_attendance(attendance)
+    # print(f"this is post: {attendance} this is response: {attendance_response}")
+    return face_locations, face_names, attendance
 
 # Capture Image endpoint
 @app.post("/capture-image/")
@@ -216,21 +210,11 @@ async def mark_attendance(file: UploadFile = File(...)):
     img_bytes = io.BytesIO(img_encoded.tobytes())
     img_base64 = base64.b64encode(img_bytes.getvalue()).decode('utf-8')
 
-    # Fetch the attendance time only if a known face is detected
-    # attendanceTime = ""
-    # if detected_id is not None:
-    #     apiUrl = apiBaseUrl + "/attendanceLog/user/" + str(detected_id) 
-    #     result = requests.get(url=apiUrl)
-    #     data = result.json()
-    #     attendanceTime = data[-1]['attendanceLogTime']
-    #     attendanceTime = str(datetime.fromisoformat(attendanceTime).strftime("%B %d, %Y, %I:%M %p"))
-
     # Create the response model
     response_data = FaceDetectionResponse(
         attendance=attendance,
         image_base64=img_base64,
     )
-    print(response_data)
 
     return JSONResponse(content=response_data.model_dump())
 
