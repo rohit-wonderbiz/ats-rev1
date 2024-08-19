@@ -1,0 +1,24 @@
+<div
+  *ngIf="toast"
+  [ngClass]="{
+    'fixed max-w-sm p-4 text-white rounded-lg shadow-lg z-40': true,
+    'bg-green-500': toast.type === 'success',
+    'bg-red-500': toast.type === 'error',
+    'bg-blue-500': toast.type === 'info',
+    'top-[14%] left-[50%] translate-x-[-50%]': toast.position == 'top',
+    'bottom-10 right-10': toast.position == 'bottom'
+  }"
+  role="alert"
+>
+  <div class="flex items-center">
+    <div class="flex-grow">{{ toast.message }}</div>
+    <button
+      type="button"
+      class="ml-4 text-white"
+      aria-label="Close"
+      (click)="closeToast()"
+    >
+      <i class="fa-solid fa-x"></i>
+    </button>
+  </div>
+</div>

@@ -1,0 +1,43 @@
+<div [ngClass]="{ flex: isClose, hidden: !isClose }">
+  <app-toast
+    [isClose]="isClose"
+    [toast]="toast"
+    (onclose)="onClose()"
+  ></app-toast>
+</div>
+<div
+  class="flex flex-wrap md:flex-nowrap mx-10 w-100 justify-evenly max-w-2xl md:mx-auto mt-5"
+>
+  <form class="max-w-sm">
+    <label for="email-address-icon" class="block mb-2 text-sm font-medium"
+      >Enter your Employee Id</label
+    >
+    <div class="relative">
+      <div
+        class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none"
+      >
+        <i class="fa-solid fa-user"></i>
+      </div>
+      <input
+        type="number"
+        id="email-address-icon"
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:border-1 block w-1/2 ps-10 p-2.5"
+        placeholder="73"
+        name="id"
+        [(ngModel)]="user.userId"
+      />
+    </div>
+    <div class="flex">
+      <button
+        type="button"
+        class="text-white mt-3 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 focus:outline-none"
+        (click)="getUser()"
+      >
+        Enroll
+      </button>
+    </div>
+  </form>
+  <div [ngClass]="{ hidden: !isUser }">
+    <app-profile [user]="user"></app-profile>
+  </div>
+</div>
