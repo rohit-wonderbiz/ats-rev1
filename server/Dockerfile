@@ -22,6 +22,9 @@ RUN apt-get update && apt-get install -y \
     && ACCEPT_EULA=Y apt-get install -y msodbcsql17 \
     && apt-get clean
 
+# Set the timezone to IST
+ENV TZ=Asia/Kolkata
+
 # Set the working directory in the container
 WORKDIR /app
 
