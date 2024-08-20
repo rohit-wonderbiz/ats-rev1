@@ -101,7 +101,6 @@ export class DetectComponent {
       if (imageBlob) {
         this.attendanceService.markAttendance(imageBlob).subscribe({
           next: (data) => {
-            console.log(data);
             const imageUrl = `data:image/jpeg;base64,${data.image_base64}`;
             const image = new Image();
             image.src = imageUrl;

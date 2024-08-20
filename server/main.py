@@ -101,34 +101,38 @@ def detect_known_faces(known_face_id, known_face_names, known_face_encodings, fr
         for i, face_encoding in enumerate(face_encodings):
             matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
             name = "Unknown"
+            print("multiple")
             face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
             best_match_index = np.argmin(face_distances)
-
-            if matches[best_match_index]:
-                detected_id = known_face_id[best_match_index]
+            print(known_face_id,known_face_names)
+            print(face_distances[best_match_index])
+            if matches[best_match_index] and face_distances[best_match_index] < 0.3:
                 name = known_face_names[best_match_index]
-                if face_distances[best_match_index] < 0.45:
-                    if name not in last_attendance_time or (current_time - last_attendance_time[name]) > waitTime:
-                        last_attendance_time[name] = current_time
-                        # response.append(mark_attendance(detected_id))  # Append the dictionary
-                        data_list.append({
-                            "UserId": detected_id,
-                            "AttendanceLogTime": datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
-                            "CheckType": cameraType
-                        })  # Append the dictionary
+                detected_id = known_face_id[best_match_index]
+                if name not in last_attendance_time or (current_time - last_attendance_time[name]) > waitTime:
+                    last_attendance_time[name] = current_time
+                    data_list.append({
+                        "UserId": detected_id,
+                        "AttendanceLogTime": datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                        "CheckType": cameraType
+                    })  # Append the dictionary
+                else:
+                    name = "Unknown"
+                    detected_id = None
             else:
-                # Save the unknown face
                 unknown_face_filename = os.path.join(unknown_faces_dir, f"unknown_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.png")
                 cv2.imwrite(unknown_face_filename, frame[face_locations[i][0]:face_locations[i][2], face_locations[i][3]:face_locations[i][1]])
             face_names.append(name)
     else:
         if face_encodings:
+            print("single")
             face_encoding = face_encodings[0]
             matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
             name = "Unknown"
             face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
             best_match_index = np.argmin(face_distances)
-            if matches[best_match_index] and face_distances[best_match_index] < 0.45:
+            if matches[best_match_index] and face_distances[best_match_index] < 0.25:
+                print(face_distances[best_match_index])
                 detected_id = known_face_id[best_match_index]
                 name = known_face_names[best_match_index]
                 if name not in last_attendance_time or (current_time - last_attendance_time[name]) > waitTime:
