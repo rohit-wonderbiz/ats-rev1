@@ -78,13 +78,9 @@ def detect_known_faces(known_face_id, known_face_names, known_face_encodings, fr
     apiUrl = apiBaseUrl + "/attendanceLog/multiple"
     data_list= []
     def mark_attendance(d):
-        print("before", d)
         x = requests.post(url=apiUrl,json=d)
         response = x.json()
-         # Parse the JSON response to a Python dictionary
-        # print(f"Marked Attendance for {userId}")
         return response  # Return the dictionary, not a string
-    # Convert the frame from BGR to RGB
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     # Detect face locations and encodings
@@ -140,9 +136,6 @@ def detect_known_faces(known_face_id, known_face_names, known_face_encodings, fr
 
             face_names.append(name)
     attendance =mark_attendance(data_list)
-    # print(attendance)
-    # mark_attendance(attendance)
-    # print(f"this is post: {attendance} this is response: {attendance_response}")
     return face_locations, face_names, attendance
 
 # Capture Image endpoint
