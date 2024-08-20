@@ -3,17 +3,25 @@ import { FaceService } from '../../services/face.service';
 import Toast from '../../models/toast.model';
 import User from '../../models/user.model';
 import ReponseUser from '../../models/respose.model';
+import { SpeechService } from '../../services/speech.service';
+import { Subject, debounceTime } from 'rxjs';
 
-// patch nodejs environment, we need to provide an implementation of
-// HTMLCanvasElement and HTMLImageElement
 @Component({
   selector: 'app-detect',
   templateUrl: './detect.component.html',
   styleUrl: './detect.component.css',
 })
 export class DetectComponent {
-  constructor(private attendanceService: FaceService) {}
+  constructor(
+    private attendanceService: FaceService,
+    private ttsService: SpeechService
+  ) {
+    this.ttsText
+      .pipe(debounceTime(1500))
+      .subscribe((text) => this.ttsService.speak(text));
+  }
   cameraType: 'IN' | 'OUT' = 'IN';
+  private ttsText = new Subject<string>();
   isClose: boolean = false;
   isDetected: boolean = false;
   isMarkAttendanceDisabled: boolean = false;
@@ -98,26 +106,28 @@ export class DetectComponent {
             const image = new Image();
             image.src = imageUrl;
             if (this.resElement) {
+              const attendedNames = data.attendance.map((a) => a.firstName);
+              let ttsText =
+                attendedNames.length > 0
+                  ? `Thank you ${attendedNames.join(', ')}`
+                  : 'Attendance not marked';
+              this.ttsService.setText(ttsText);
               this.resElement.nativeElement.innerHTML = '';
               this.resElement.nativeElement.appendChild(image);
-              const attendedNames = data.attendance.map((a) => a.firstName);
-              this.displayElement.nativeElement.innerText =
+              let msg =
                 attendedNames.length > 0
                   ? `Marked Attendance for ${attendedNames.join(', ')} at ${
                       data.attendance[0].attendanceLogTime
                     }`
                   : 'No attendance marked';
+              this.displayElement.nativeElement.innerText = msg;
               this.isClose = true;
-              this.toast.message =
-                attendedNames.length > 0
-                  ? `Marked Attendance for ${attendedNames.join(', ')} at ${
-                      data.attendance[0].attendanceLogTime
-                    }`
-                  : 'No attendance marked';
+              this.toast.message = msg;
               this.toast.position = 'top';
               this.toast.type = attendedNames.length > 0 ? 'success' : 'info';
               this.isDetected = true;
               this.isMarkAttendanceDisabled = false;
+              this.ttsService.speak();
               this.users = data.attendance.map((d) => {
                 return {
                   userId: d.userId,
@@ -136,6 +146,7 @@ export class DetectComponent {
                 this.isDetected = false;
                 this.displayElement.nativeElement.innerText = '';
                 this.users = [];
+                // this.ttsService.stop();
               }, 4000);
             }
           },
