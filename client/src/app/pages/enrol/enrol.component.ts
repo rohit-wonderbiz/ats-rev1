@@ -9,7 +9,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import User from '../../models/user.model';
 import { FaceService } from '../../services/face.service';
 import Toast from '../../models/toast.model';
+<<<<<<< HEAD
 // import * as canvas from 'canvas';
+=======
+>>>>>>> 6ec6ec3f9f9a1b63416608f628cda0daf563f908
 import * as faceapi from 'face-api.js';
 
 @Component({
@@ -20,6 +23,7 @@ import * as faceapi from 'face-api.js';
 export class EnrolComponent {
   detectedFace: number = 0;
   constructor(private router: Router, private faceService: FaceService) {}
+  detectFaceInterval: any;
   isClose: boolean = false;
   isEncodingDisabled: boolean = false;
   isCapturedDisabled: boolean = false;
@@ -85,14 +89,15 @@ export class EnrolComponent {
           if (video) {
             video.srcObject = stream;
             this.stream = stream;
-
-            setInterval(async () => {
-              const detections = await faceapi.detectAllFaces(
-                video,
-                new faceapi.TinyFaceDetectorOptions()
-              );
-              this.detectedFace = detections.length;
-            }, 100);
+            video.addEventListener('playing', () => {
+              this.detectFaceInterval = setInterval(async () => {
+                const detections = await faceapi.detectAllFaces(
+                  video,
+                  new faceapi.TinyFaceDetectorOptions()
+                );
+                this.detectedFace = detections.length;
+              }, 100);
+            });
           }
         })
         .catch((error: any) => {
@@ -106,6 +111,7 @@ export class EnrolComponent {
   private stopWebcam(): void {
     if (this.stream) {
       const tracks = this.stream.getTracks();
+      clearInterval(this.detectFaceInterval);
       tracks.forEach((track) => track.stop());
     }
   }
@@ -157,8 +163,8 @@ export class EnrolComponent {
     this.isEncodingDisabled = true;
     this.isCapturedDisabled = true;
     const formData = new FormData();
+    clearInterval(this.detectFaceInterval);
     formData.append('employee_id', this.user.userId.toString());
-
     this.faceService.saveEncodings(formData).subscribe(
       (data) => {
         this.isClose = true;
