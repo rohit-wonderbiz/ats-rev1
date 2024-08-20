@@ -57,12 +57,21 @@ class FaceDetectionResponse(BaseModel):
     attendance: List[dict]  
     image_base64: str
 
-# Load known encodings from the database
-def load_encodings_from_db(conn):
-    cursor = conn.cursor()
-    cursor.execute('SELECT UserId, FirstName, FaceEncoding FROM EmployeeDetails WHERE DATALENGTH(FaceEncoding) > DATALENGTH(0x)')
-    rows = cursor.fetchall()
-    return [row[0] for row in rows], [row[1] for row in rows], [pickle.loads(row[2]) for row in rows]
+# Load known encodings from the api
+def load_encodings_from_db():
+    api_url = f"{apiBaseUrl}/employeedetail/face-encoding"
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()
+        employees = response.json()
+        filtered_employees = [emp for emp in employees if emp.get('faceEncoding')]  
+        user_ids = [emp['userId'] for emp in filtered_employees]
+        names = [emp['firstName'] for emp in filtered_employees]
+        encodings = [pickle.loads(base64.b64decode(emp['faceEncoding'])) for emp in filtered_employees]        
+        return user_ids, names, encodings
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching data from API: {e}")
+        return [], [], []
 
 #Unkown Face 
 def is_recently_detected(face_encoding):
@@ -82,9 +91,7 @@ def detect_known_faces(known_face_id, known_face_names, known_face_encodings, fr
         print("before", d)
         x = requests.post(url=apiUrl,json=d)
         response = x.json()
-         # Parse the JSON response to a Python dictionary
-        # print(f"Marked Attendance for {userId}")
-        return response  # Return the dictionary, not a string
+        return response 
     # Convert the frame from BGR to RGB
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -183,16 +190,32 @@ async def save_encoding(employee_id: str = Form(...)):
             img_encodings = face_recognition.face_encodings(rgb_img)
             if img_encodings:
                 encodings.append(img_encodings[0])
-                os.remove(img_path)  # Optionally remove the image after processing
+                os.remove(img_path) 
 
     if encodings:
         avg_encoding = np.mean(encodings, axis=0)
         cursor = conn.cursor()
         cursor.execute('UPDATE EmployeeDetails SET FaceEncoding = ? WHERE UserId = ?', (pickle.dumps(avg_encoding), employee_id))
         conn.commit()
-        return {"status": "success", "message": "Face encoding saved!"}
-    else:
-        raise HTTPException(status_code=400, detail="No faces detected in the images!")
+    #     serialized_encoding = pickle.dumps(avg_encoding)
+    #     payload = {
+    #         "userId": (None, str(employee_id)),  # Convert employee_id to string for form-data
+    #         "faceEncoding": ("face_encoding.pkl", serialized_encoding, "application/octet-stream")
+    #     }
+    #     api_url = f"{apiBaseUrl}/employeedetail/save-encoding"  # Update with your actual API endpoint
+
+    #     response = requests.post(api_url, files=payload)
+    #     response.raise_for_status() 
+        
+    #     if response.status_code == 200:
+    #         return {"status": "success", "message": "Face encoding saved!"}
+    #     else:
+    #         return {"status": "error", "message": f"Failed to save face encoding. Error: {response.text}"}
+        
+
+    #     return {"status": "success", "message": "Face encoding saved!"}
+    # else:
+    #     raise HTTPException(status_code=400, detail="No faces detected in the images!")
 
 # Mark attendance endpoint
 @app.post("/mark-attendance/")
@@ -201,7 +224,7 @@ async def mark_attendance(file: UploadFile = File(...)):
     nparr = np.frombuffer(contents, np.uint8)
     frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-    known_face_id, known_face_names, known_face_encodings = load_encodings_from_db(conn)
+    known_face_id, known_face_names, known_face_encodings = load_encodings_from_db()
     face_locations, face_names, attendance = detect_known_faces(known_face_id, known_face_names, known_face_encodings, frame)
 
     # Draw the boundary box and label for each detected face
