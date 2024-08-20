@@ -9,7 +9,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import User from '../../models/user.model';
 import { FaceService } from '../../services/face.service';
 import Toast from '../../models/toast.model';
-import * as canvas from 'canvas';
+// import * as canvas from 'canvas';
 import * as faceapi from 'face-api.js';
 
 @Component({

@@ -211,3 +211,6 @@ async def mark_attendance(file: UploadFile = File(...)):
 
     return JSONResponse(content=response_data.model_dump())
 
+@app.get("/camera-type")
+def get_camera_type():
+    return cameraType

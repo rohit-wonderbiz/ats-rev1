@@ -1,0 +1,23 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: fastapi_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - ACCEPT_EULA=Y
+    depends_on:
+      - client
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: angular_client
+    ports:
+      - "4200:4200"
