@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import User from '../../models/user.model';
+import ReponseUser from '../../models/respose.model';
 
 @Component({
   selector: 'app-profile-list',
@@ -7,9 +7,5 @@ import User from '../../models/user.model';
   styleUrl: './profile-list.component.css',
 })
 export class ProfileListComponent {
-
-  @Input() users!: User[];
-  
-
-
+  @Input() users!: ReponseUser[];
 }

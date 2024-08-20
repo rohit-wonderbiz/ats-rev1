@@ -1,7 +1,7 @@
-import User from './user.model';
+import ReponseUser from './respose.model';
 
 interface FaceDetectionResponse {
-  face_names: string[];
+  attendance: ReponseUser[];
   image_base64: string;
   attendanceTime: string;
 }

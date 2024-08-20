@@ -48,7 +48,7 @@
           <div class="flex-shrink-0">
             <img
               class="w-8 h-8 rounded-full"
-              src="https://upload.wikimedia.org/wikipedia/commons/a/af/Default_avatar_profile.jpg"
+              [src]="'data:image/jpeg;base64,' + user.profilePic"
               alt="Neil image"
             />
           </div>
@@ -63,9 +63,9 @@
             </p>
           </div>
           <div
-            class="inline-flex items-center text-base font-semibold text-gray-900 dark:text-white"
+            class="inline-flex items-center text-base font-semibold text-gray-900 dark:text-white ml-5"
           >
-            {{ "IN" }}
+            {{ user.checkType }}
           </div>
         </div>
       </li>

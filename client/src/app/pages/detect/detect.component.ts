@@ -2,6 +2,7 @@ import { Component, ElementRef, viewChild, ViewChild } from '@angular/core';
 import { FaceService } from '../../services/face.service';
 import Toast from '../../models/toast.model';
 import User from '../../models/user.model';
+import ReponseUser from '../../models/respose.model';
 
 // patch nodejs environment, we need to provide an implementation of
 // HTMLCanvasElement and HTMLImageElement
@@ -23,82 +24,7 @@ export class DetectComponent {
 
   @ViewChild('display', { static: true })
   displayElement!: ElementRef<HTMLParagraphElement>;
-  users: User[] = [
-    {
-      userId: 1,
-      firstName: 'Vighnesh',
-      lastName: 'Manjrekar',
-      designationName: 'SDE',
-      profilePic: '',
-      email: '',
-    },
-    {
-      userId: 2,
-      firstName: 'Test',
-      lastName: 'User',
-      designationName: 'SDE',
-      profilePic: '',
-      email: '',
-    },
-    {
-      userId: 2,
-      firstName: 'Test',
-      lastName: 'User',
-      designationName: 'SDE',
-      profilePic: '',
-      email: '',
-    },
-    {
-      userId: 2,
-      firstName: 'Test',
-      lastName: 'User',
-      designationName: 'SDE',
-      profilePic: '',
-      email: '',
-    },    {
-      userId: 2,
-      firstName: 'Test',
-      lastName: 'User',
-      designationName: 'SDE',
-      profilePic: '',
-      email: '',
-    },    {
-      userId: 2,
-      firstName: 'Test',
-      lastName: 'User',
-      designationName: 'SDE',
-      profilePic: '',
-      email: '',
-    },    {
-      userId: 2,
-      firstName: 'Test',
-      lastName: 'User',
-      designationName: 'SDE',
-      profilePic: '',
-      email: '',
-    },    {
-      userId: 2,
-      firstName: 'Test',
-      lastName: 'User',
-      designationName: 'SDE',
-      profilePic: '',
-      email: '',
-    },    {
-      userId: 2,
-      firstName: 'Test',
-      lastName: 'User',
-      designationName: 'SDE',
-      profilePic: '',
-      email: '',
-    },    {
-      userId: 2,
-      firstName: 'Test',
-      lastName: 'User',
-      designationName: 'SDE',
-      profilePic: '',
-      email: '',
-    },
-  ];
+  users: ReponseUser[] = [];
   toast: Toast = {
     position: 'top',
     message: '',
@@ -159,40 +85,51 @@ export class DetectComponent {
       if (imageBlob) {
         this.attendanceService.markAttendance(imageBlob).subscribe({
           next: (data) => {
+            console.log(data);
             const imageUrl = `data:image/jpeg;base64,${data.image_base64}`;
             const image = new Image();
             image.src = imageUrl;
             if (this.resElement) {
               this.resElement.nativeElement.innerHTML = '';
               this.resElement.nativeElement.appendChild(image);
-              const attendedNames = data.face_names.filter(
-                (f) => f != 'Unknown'
-              );
-              console.log(attendedNames);
+              const attendedNames = data.attendance.map((a) => a.firstName);
               this.displayElement.nativeElement.innerText =
                 attendedNames.length > 0
                   ? `Marked Attendance for ${attendedNames.join(', ')} at ${
-                      data.attendanceTime
+                      data.attendance[0].attendanceLogTime
                     }`
                   : 'No attendance marked';
               this.isClose = true;
               this.toast.message =
                 attendedNames.length > 0
                   ? `Marked Attendance for ${attendedNames.join(', ')} at ${
-                      data.attendanceTime
+                      data.attendance[0].attendanceLogTime
                     }`
                   : 'No attendance marked';
               this.toast.position = 'top';
               this.toast.type = attendedNames.length > 0 ? 'success' : 'info';
               this.isDetected = true;
               this.isMarkAttendanceDisabled = false;
+              this.users = data.attendance.map((d) => {
+                return {
+                  userId: d.userId,
+                  firstName: d.firstName,
+                  lastName: d.lastName,
+                  email: d.email,
+                  profilePic: d.profilePic,
+                  designationName: '',
+                  checkType: d.checkType,
+                  attendanceLogTime: d.attendanceLogTime,
+                  id: d.id,
+                };
+              });
               setTimeout(() => {
                 this.isClose = false;
                 this.isDetected = false;
                 this.displayElement.nativeElement.innerText = '';
+                this.users = [];
               }, 4000);
             }
-            console.log('Detected Faces:', data.face_names);
           },
           error: (error) => {
             console.error('Error marking attendance:', error);

@@ -188,7 +188,12 @@
         <p>August 19, 2024, 03:46 PM</p>
       </div>
     </div> -->
-    <app-profile-list class="w-1/2 mx-auto" [users]="users"></app-profile-list>
+    <div *ngIf="users.length > 0">
+      <app-profile-list
+        class="w-1/2 mx-auto"
+        [users]="users"
+      ></app-profile-list>
+    </div>
   </div>
 
   <p #display></p>
