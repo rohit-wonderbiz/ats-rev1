@@ -13,6 +13,7 @@ import ReponseUser from '../../models/respose.model';
 })
 export class DetectComponent {
   constructor(private attendanceService: FaceService) {}
+  cameraType: 'IN' | 'OUT' = 'IN';
   isClose: boolean = false;
   isDetected: boolean = false;
   isMarkAttendanceDisabled: boolean = false;
@@ -33,7 +34,14 @@ export class DetectComponent {
 
   ngOnInit(): void {
     this.initializeWebcam();
-    console.log('test');
+    this.attendanceService.getCameraType().subscribe({
+      next: (data) => {
+        this.cameraType = data;
+      },
+      error: (e) => {
+        this.cameraType = 'IN';
+      },
+    });
   }
   ngOnDestroy(): void {
     this.stopWebcam();

@@ -19,6 +19,10 @@ export class FaceService {
     return this.http.post(`${this.baseURI}/save-encoding/`, formData);
   }
 
+  getCameraType(): Observable<'IN' | 'OUT'> {
+    return this.http.get<'IN' | 'OUT'>(`${this.baseURI}/camera-type`);
+  }
+
   markAttendance(imageBlob: Blob): Observable<FaceDetectionResponse> {
     const formData = new FormData();
     formData.append('file', imageBlob, 'capture.jpg');
@@ -26,7 +30,7 @@ export class FaceService {
       `${this.baseURI}/mark-attendance/`,
       formData,
       {
-        responseType: 'json' as 'json', 
+        responseType: 'json' as 'json',
       }
     );
   }
