@@ -1,6 +1,6 @@
 import json
 import cv2
-import os
+import os, shutil
 import requests
 import numpy as np
 import pickle
@@ -183,9 +183,10 @@ async def save_encoding(employee_id: str = Form(...)):
             img_encodings = face_recognition.face_encodings(rgb_img)
             if img_encodings:
                 encodings.append(img_encodings[0])
-                os.remove(img_path) 
+                # os.remove(img_path) 
 
     if encodings:
+        shutil.rmtree(person_dir)
         avg_encoding = np.mean(encodings, axis=0)
         # cursor = conn.cursor()
         # cursor.execute('UPDATE EmployeeDetails SET FaceEncoding = ? WHERE UserId = ?', (pickle.dumps(avg_encoding), employee_id))
@@ -205,8 +206,6 @@ async def save_encoding(employee_id: str = Form(...)):
         else:
             return {"status": "error", "message": f"Failed to save face encoding. Error: {response.text}"}
         
-
-        return {"status": "success", "message": "Face encoding saved!"}
     else:
         raise HTTPException(status_code=400, detail="No faces detected in the images!")
 
