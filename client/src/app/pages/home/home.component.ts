@@ -27,6 +27,7 @@ export class HomeComponent {
     lastName: '',
     designationName: '',
     email: '',
+    id:0,
     // profilePicture: new Blob([]),
     profilePic: '',
   };
@@ -35,12 +36,13 @@ export class HomeComponent {
     console.log(this.user.userId);
     this.userService.getUserById(this.user.userId).subscribe({
       next: (data) => {
-        const { designationName, firstName, lastName, profilePic } = data;
+        const { designationName, firstName, lastName, profilePic,id} = data;
         this.user.firstName = firstName;
         this.user.lastName = lastName;
         this.user.designationName = designationName;
         this.user.profilePic = profilePic;
         this.isUser = true;
+        this.user.id = id;
         localStorage.setItem('user', JSON.stringify(this.user));
       },
       error: (err) => {

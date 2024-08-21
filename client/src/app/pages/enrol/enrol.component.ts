@@ -44,6 +44,7 @@ export class EnrolComponent {
     designationName: '',
     email: '',
     profilePic: '',
+    id: 0,
   };
   private loadUser(): void {
     const userString = localStorage.getItem('user');
@@ -130,7 +131,7 @@ export class EnrolComponent {
       if (imageBlob) {
         const formData = new FormData();
         formData.append('file', imageBlob, 'capture.jpg');
-        formData.append('employee_id', this.user.userId.toString());
+        formData.append('employee_id', this.user.id.toString());
 
         this.faceService.captureImage(formData).subscribe(
           (data) => {
@@ -161,7 +162,7 @@ export class EnrolComponent {
     this.isCapturedDisabled = true;
     const formData = new FormData();
     clearInterval(this.detectFaceInterval);
-    formData.append('employee_id', this.user.userId.toString());
+    formData.append('employee_id', this.user.id.toString());
     this.faceService.saveEncodings(formData).subscribe(
       (data) => {
         this.isClose = true;

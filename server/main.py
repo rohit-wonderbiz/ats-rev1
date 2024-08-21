@@ -187,28 +187,28 @@ async def save_encoding(employee_id: str = Form(...)):
 
     if encodings:
         avg_encoding = np.mean(encodings, axis=0)
-        cursor = conn.cursor()
-        cursor.execute('UPDATE EmployeeDetails SET FaceEncoding = ? WHERE UserId = ?', (pickle.dumps(avg_encoding), employee_id))
-        conn.commit()
-    #     serialized_encoding = pickle.dumps(avg_encoding)
-    #     payload = {
-    #         "userId": (None, str(employee_id)),  # Convert employee_id to string for form-data
-    #         "faceEncoding": ("face_encoding.pkl", serialized_encoding, "application/octet-stream")
-    #     }
-    #     api_url = f"{apiBaseUrl}/employeedetail/save-encoding"  # Update with your actual API endpoint
+        # cursor = conn.cursor()
+        # cursor.execute('UPDATE EmployeeDetails SET FaceEncoding = ? WHERE UserId = ?', (pickle.dumps(avg_encoding), employee_id))
+        # conn.commit()
+        serialized_encoding = pickle.dumps(avg_encoding)
+        base64_encoding = base64.b64encode(serialized_encoding).decode('utf-8')
+        payload = {
+            "faceEncoding":base64_encoding
+        }
+        api_url = f"{apiBaseUrl}/employeedetail/{employee_id}" 
 
-    #     response = requests.post(api_url, files=payload)
-    #     response.raise_for_status() 
+        response = requests.put(api_url, json=payload)
+        response.raise_for_status() 
         
-    #     if response.status_code == 200:
-    #         return {"status": "success", "message": "Face encoding saved!"}
-    #     else:
-    #         return {"status": "error", "message": f"Failed to save face encoding. Error: {response.text}"}
+        if response.status_code == 200:
+            return {"status": "success", "message": "Face encoding saved!"}
+        else:
+            return {"status": "error", "message": f"Failed to save face encoding. Error: {response.text}"}
         
 
-    #     return {"status": "success", "message": "Face encoding saved!"}
-    # else:
-    #     raise HTTPException(status_code=400, detail="No faces detected in the images!")
+        return {"status": "success", "message": "Face encoding saved!"}
+    else:
+        raise HTTPException(status_code=400, detail="No faces detected in the images!")
 
 # Mark attendance endpoint
 @app.post("/mark-attendance/")

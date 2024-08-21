@@ -5,4 +5,5 @@ export default interface User {
   designationName: string;
   email: string;
   profilePic: string;
+  id: number;
 }
