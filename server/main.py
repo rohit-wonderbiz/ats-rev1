@@ -22,10 +22,6 @@ import base64
 
 app = FastAPI()
 
-# origins = [
-#     "http://localhost",
-#     "http://localhost:4200",
-# ]
 origins = ["*"]
 
 app.add_middleware(
@@ -152,9 +148,6 @@ def detect_known_faces(known_face_id, known_face_names, known_face_encodings, fr
 
             face_names.append(name)
     attendance =mark_attendance(data_list)
-    # print(attendance)
-    # mark_attendance(attendance)
-    # print(f"this is post: {attendance} this is response: {attendance_response}")
     return face_locations, face_names, attendance
 
 # Capture Image endpoint
