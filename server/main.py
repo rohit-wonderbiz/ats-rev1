@@ -109,7 +109,7 @@ def detect_known_faces(known_face_id, known_face_names, known_face_encodings, fr
             best_match_index = np.argmin(face_distances)
             print(known_face_id,known_face_names)
             print(face_distances[best_match_index])
-            if matches[best_match_index] and face_distances[best_match_index] < 0.3:
+            if matches[best_match_index] and face_distances[best_match_index] < 0.32:
                 name = known_face_names[best_match_index]
                 detected_id = known_face_id[best_match_index]
                 if name not in last_attendance_time or (current_time - last_attendance_time[name]) > waitTime:
@@ -134,7 +134,7 @@ def detect_known_faces(known_face_id, known_face_names, known_face_encodings, fr
             name = "Unknown"
             face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
             best_match_index = np.argmin(face_distances)
-            if matches[best_match_index] and face_distances[best_match_index] < 0.25:
+            if matches[best_match_index] and face_distances[best_match_index] < 0.32:
                 print(face_distances[best_match_index])
                 detected_id = known_face_id[best_match_index]
                 name = known_face_names[best_match_index]
