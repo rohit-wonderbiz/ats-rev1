@@ -7,7 +7,7 @@ import FaceDetectionResponse from '../models/detection.model';
   providedIn: 'root',
 })
 export class FaceService {
-  private baseURI = 'http://localhost:8000';
+  private baseURI = 'http://192.168.29.191:8000';
 
   constructor(private http: HttpClient) {}
 
